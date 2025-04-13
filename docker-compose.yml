@@ -1,0 +1,26 @@
+
+services:
+#run 3 servers
+    server1:
+        build: "./server1"
+        container_name: dc_server1
+        ports:
+            - 3000:3000
+        volumes:
+        - "./frontend:/app/frontend"  
+            
+    server2:
+        build: "./server2"
+        container_name: dc_server2
+        ports:
+            - 3001:3001
+        volumes:
+        - "./frontend:/app/frontend"  
+        
+    server3:
+        build: "./server3"
+        container_name: dc_server3
+        ports:
+            - 3002:3002
+        volumes:
+        - "./frontend:/app/frontend"  
