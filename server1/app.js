@@ -1,14 +1,14 @@
 const express = require('express');
 const mysql = require("mysql2");
-const { returnDefault, login, registerUser } = require("../frontend/functions")
-const { loginLayout } = require("../frontend/login");
-const { regLayout } = require("../frontend/register");
-const { filesLayout } = require("../frontend/files");
-const {upLoadFileToDB, uploadFile} = require("../frontend/fileProcessing");
+const { returnDefault, login, registerUser } = require("./frontend/functions")
+const { loginLayout } = require("./frontend/login");
+const { regLayout } = require("./frontend/register");
+const { filesLayout } = require("./frontend/files");
+const { upLoadFileToDB,uploadFile } = require("./frontend/fileProcessing");
 
 const path = require("path");
 const serverColor = "#B22222";
-
+const serverNumber = "1";
 
 require("dotenv").config();
 
@@ -36,7 +36,7 @@ databaseConnection.connect((error) => {
 
 app.get("/", (req, res) => {
     res.send(
-        returnDefault(serverColor, "1")
+        returnDefault(serverColor, serverNumber)
     );
 });
 
@@ -49,7 +49,15 @@ app.post("/login", async (req, res) => {
 })
 
 app.get("/files", (req, res) => {
-    res.send(filesLayout(serverColor, databaseConnection));
+    const query = "SELECT * FROM load_storage.user_files";
+    databaseConnection.query(query, async (error, results) => {
+        if (error) {
+            console.error(error);
+            return res.send(filesLayout(serverColor, []));
+        }
+        res.send(filesLayout(serverColor, results));
+    });
+
 });
 
 app.get("/register", (req, res) => {

@@ -1,4 +1,4 @@
-const filesLayout = (bgColor, dbConnection) => {
+const filesLayout = (bgColor, files = []) => {
     return (`
         <!DOCTYPE html>
         <html>
@@ -131,94 +131,79 @@ const filesLayout = (bgColor, dbConnection) => {
                     </thead>
 
                     <tbody>
+                    ${files.length === 0 ?
+            `   <tr>
+                            <td colspan="5" style="text-align: center;"> No files found</td>
+                        <tr>` :
+            files.map(file => `
+                        <tr key=${file.file_id}>
+                            <td>${file.file_name} </td>
+                            <td>${formatFileSize(file.sile_size)} </td>
+                            <td>${new Date(file.upload_date).toLocaleString()} </td>
+                            <td>${file.download_count} </td>
+                            <td>
+                                <button class="deleteButton" onclick=deleteFile("${file.file_id}")> 
+                                    Delete
+                                </button>
+                            </td>
+                        <tr> 
+                    `).join("")}
+                    </tbody >
+                </table >
+            </div >
 
-                    </tbody>
-                </table>
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <span class="closeButton"> &times;</span>
+            <h2> Upload a file<h2>
+                <form id="uploadForm" enctype="multipart/form-data" method="POST" action="/uploadFile">
+                    <div class="form-container">
+                        <label for="fileData">
+                            Select file
+                        </label>
+                        <input type="file" id="fileData" name="fileData" required>
+                    </div>
+                    <button type="submit" class="submitButton">Upload</button>
+                </form>
             </div>
+        </div>
+        <script>
+            const modal = document.getElementById("uploadModal");
+            const openButton = document.getElementById("openUpload");
+            const closeButton = document.querySelector(".closeButton");
 
-
-            <!-- modal -->
-            <div id="uploadModal" class="modal">
-                <div class="modal-content">
-                <span class="closeButton"> &times;</span>
-                <h2> Upload a file<h2>
-                    <form id="uploadForm" enctype="multipart/form-data" method="POST" action="/uploadFile">
-                        <div class="form-container">
-                            <label for="fileData">
-                                Select file
-                            </label>
-                            <input type="file" id="fileData" name="fileData" required>
-                        </div>
-                        <button type="submit" class="submitButton">Upload</button>
-                    </form>
-                </div>
-            </div>
-            <script>
-                const modal = document.getElementById("uploadModal");
-                const openButton = document.getElementById("openUpload");
-                const closeButton = document.querySelector(".closeButton");
-
-                openButton.onclick = function () { document.getElementById("uploadModal").style.display ="block"; }
-                closeButton.onclick = function () { 
-                    document.getElementById("uploadModal").style.display ="none";
-                    document.getElementById("uploadForm").reset();
+            openButton.onclick = function () {document.getElementById("uploadModal").style.display = "block"; }
+            closeButton.onclick = function () {
+                document.getElementById("uploadModal").style.display = "none";
+            document.getElementById("uploadForm").reset();
                 }
 
-                window.onclick = function (event) {
+            window.onclick = function (event) {
                     if (event.target == modal) {
-                        document.getElementById("uploadModal").style.display ="none";
-                        document.getElementById("uploadForm").reset();
+                document.getElementById("uploadModal").style.display = "none";
+            document.getElementById("uploadForm").reset();
                     }
                 }
 
-            </script>
-        </body>
-        </html>
-        `);
+        </script>
+    </body>
+        </html >
+    `);
 }
 
-const loadFilesList = async (dbConnection, document) => {
-    try {
 
-        const tableBody = document.querySelector("#fileTable tbody");
-        tableBody.innerHTML ="";
+const formatFileSize = (file) => {
+    const size = file > 1024 * 1024 ?
+        `${(file / (1024 * 1024)).toFixed(2)} MB` :
+        `${Math.round(file / 1024)} KB`;
 
-        const query = "SELECT * FROM load_storage.files";
-        dbConnection.query(query), async (error, results) => {
-            if (error) {
-                console.error(error);
-               // alert(error);
-                return;
-            }
-            else {
-                console.log(results);
-                results.forEach(file => {
-                    const rowValues = document.createElement("tr");
+    return size;
+}
 
-                    rowValues.innerHTML = `
-                        <td>${file.file_name} </td>
-                        <td>${file.file_size} </td>
-                        <td>${file.upload_date} </td>
-                        <td>${file.download_count} </td>
-                        <td>
-                            <button class="deleteButton" onclick=deleteFile("${file.file_id}")> 
-                                Delete
-                            </button>
-                        </td>
-                    `;
-                });
-                return;
-            }
+const deleteFile = async () => {
 
-        }
-    } catch (error) {
-        console.error(error);
-        //alert(error);
-        return;
-    }
 }
 
 module.exports = {
     filesLayout,
-
 }

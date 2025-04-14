@@ -47,7 +47,7 @@ const upLoadFileToDB = async (req, res, databaseConnection) => {
             file_type: mimetype
         }
         await uploadTheData(databaseConnection, fileData);
-        return res.status(200).json({ message: "Success" });
+        return res.redirect("/files");
     } catch (error) {
         console.error(error);
         fs.unlinkSync(filePath);
