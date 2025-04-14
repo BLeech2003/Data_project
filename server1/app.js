@@ -1,8 +1,11 @@
 const express = require('express');
 const mysql = require("mysql2");
-const { returnDefault, login, registerUser } = require("./frontend/functions")
-const { loginLayout } = require("./frontend/login");
-const { regLayout } = require("./frontend/register");
+const { returnDefault, login, registerUser } = require("../frontend/functions")
+const { loginLayout } = require("../frontend/login");
+const { regLayout } = require("../frontend/register");
+const { filesLayout } = require("../frontend/files");
+const {upLoadFileToDB, uploadFile} = require("../frontend/fileProcessing");
+
 const path = require("path");
 const serverColor = "#B22222";
 
@@ -33,7 +36,7 @@ databaseConnection.connect((error) => {
 
 app.get("/", (req, res) => {
     res.send(
-        returnDefault(serverColor,"1")
+        returnDefault(serverColor, "1")
     );
 });
 
@@ -46,7 +49,7 @@ app.post("/login", async (req, res) => {
 })
 
 app.get("/files", (req, res) => {
-    res.send("files");
+    res.send(filesLayout(serverColor, databaseConnection));
 });
 
 app.get("/register", (req, res) => {
@@ -56,6 +59,9 @@ app.post("/register", async (req, res) => {
     registerUser(req, res, databaseConnection);
 })
 
+app.post("/uploadFile", uploadFile.single("fileData"), (req, res) => {
+    upLoadFileToDB(req, res, databaseConnection);
+});
 
 app.listen(port, () => {
     console.log(`Server running on ${port}`);
