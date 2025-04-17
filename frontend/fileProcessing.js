@@ -73,9 +73,9 @@ const copyFileToServer = async (localPath, filename) => {
     const clientConnection = new Client();
     const serverDirectory = "mysqlUploads";
     const serverCommunicationConf = {
-        host: process.env.DATABASE_HOST,
-        username: "bianca",
-        password: "bianca",
+        host: process.env.SSH_HOST,
+        username: process.env.SSH_USERNAME,
+        password: process.env.SSH_PASSWORD,
         port: 22,
         tryKeyboard: true,
     }

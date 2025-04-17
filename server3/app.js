@@ -7,7 +7,7 @@ const { filesLayout } = require("./frontend/files");
 const { upLoadFileToDB, uploadFile } = require("./frontend/fileProcessing");
 
 const path = require("path");
-const serverColor = "#FEE12B";
+const serverColor = "#008ECC";
 const port = 3002;
 const serverNumber = "3";
 require("dotenv").config();
