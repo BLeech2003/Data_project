@@ -10,6 +10,8 @@
   "description": "",
   "dependencies": {
     "basic-ftp": "^5.0.5",
+    "bcrypt": "^5.1.1",
+    "express-session": "^1.18.1",
     "multer": "^1.4.5-lts.2",
     "ssh2": "^1.16.0"
   }

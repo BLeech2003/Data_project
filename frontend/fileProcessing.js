@@ -5,7 +5,7 @@ const { Client } = require("ssh2");
 
 const storageConfig = multer.diskStorage({
     destination: (req, file, cb) => {
-        //req?.user?.user_id.toString()
+        req?.session?.user?.user_id.toString();
         const uploadDirectory = path.join(__dirname, "uploads");
         fs.mkdir(uploadDirectory, { recursive: true }, (err) => {
             if (err)
@@ -35,7 +35,7 @@ const upLoadFileToDB = async (req, res, databaseConnection) => {
     if (!req.file)
         return res.status(400).json({ error: "No file uploaded" });
 
-    const user_id = req?.user?.user_id || 1;
+    const user_id = req?.session?.user?.user_id || 1;
     const { originalname, filename, path: filePath, size, mimetype } = req.file;
 
     try {
@@ -85,8 +85,8 @@ const copyFileToServer = async (localPath, filename) => {
         tryKeyboard: true,
     }
 
-    const remotePath = path.join(serverDirectory, filename);
-
+   // const remotePath = path.join(serverDirectory, filename);
+const remotePath = `${serverDirectory}/${filename}`;
     return new Promise((resolve, reject) => {
         clientConnection.on("ready", () => {
             clientConnection.sftp((error, sftp) => {
@@ -126,7 +126,7 @@ const downloadFileFromDB = async (req, res, dbConnection) => {
 
         const fileFromServer = await getFileFromServer(file.file_path);
         res.setHeader("Content-Type", file.file_type);
-        res.setHeader("Content-Disposition", `"attachment; filename="${encodeURIComponent(file.file_name)}"`);
+        res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(file.file_name)}"`);
         res.setHeader("Content-Length", file.sile_size);
         fileFromServer.pipe(res);
     } catch (error) {
@@ -135,7 +135,7 @@ const downloadFileFromDB = async (req, res, dbConnection) => {
     }
 };
 
-const getFileRecord = async (dbConnection, fileId, user_id) => {
+const getFileRecord = async (dbConnection, fileId) => {
     return new Promise((resolve, reject) => {
         const getQuery = `SELECT * FROM load_storage.user_files WHERE file_id = ?`;
 
@@ -152,7 +152,7 @@ const getFileRecord = async (dbConnection, fileId, user_id) => {
 }
 
 const getFileFromServer = (remotePath) => {
-    console.log("check server1",remotePath);
+
     const clientConnection = new Client();
     const serverCommunicationConf = {
         host: process.env.SSH_HOST,
@@ -193,9 +193,9 @@ const getFileFromServer = (remotePath) => {
 
 const deleteFileFromDB = async (req, res, dbConnection) => {
     const fileId = req.params.id;
-    const user_id = req?.user?.user_id || 1;
+    const user_id = req?.session?.user?.user_id || 1;
     try {
-        const file = await getFileRecord(dbConnection, fileId, user_id);
+        const file = await getFileRecord(dbConnection, fileId);
         if (!file) {
             return res.status(404).json({ error: "No file found" });
         }
@@ -211,11 +211,12 @@ const deleteFileFromDB = async (req, res, dbConnection) => {
 
 const deleteFileRecord = async (dbConnection, fileId, user_id) => {
     return new Promise((resolve, reject) => {
-        const deleteQuery = `DELETE FROM load_storage.user_files WHERE file_id = ? AND user_id = ?`;
+        const deleteQuery = `DELETE FROM load_storage.user_files WHERE file_id = ?`;
 
+        console.log(fileId);
         dbConnection.execute(
             deleteQuery,
-            [fileId, user_id],
+            [fileId],
             (error, results) => {
                 if (error)
                     reject(error);
@@ -235,7 +236,7 @@ const deleteFileFromServer = async (filePath) => {
         port: 22,
         tryKeyboard: true,
     }
-
+console.log(filePath);
     return new Promise((resolve, reject) => {
         clientConnection.on("ready", () => {
             clientConnection.sftp((error, sftp) => {
@@ -243,11 +244,11 @@ const deleteFileFromServer = async (filePath) => {
                     clientConnection.end();
                     return reject(new Error("stfp failed " + error.message));
                 }
-                sftp.stat(filePath, (err, stats) => {
-                    if (err) {
-                        clientConnection.end();
-                        return reject(new Error("File not found"));
-                    }
+                // sftp.stat(filePath, (err, stats) => {
+                //     if (err) {
+                //         clientConnection.end();
+                //         return reject(new Error("File not found"));
+                //     }
                     sftp.unlink(filePath, (unlinkError) => {
                         clientConnection.end();
                         if (unlinkError) {
@@ -256,7 +257,7 @@ const deleteFileFromServer = async (filePath) => {
                         else
                             resolve();
                     })
-                });
+               // });
 
             });
         }).on("error", (error) => {

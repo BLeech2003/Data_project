@@ -5,6 +5,8 @@ const { loginLayout } = require("../frontend/login");
 const { regLayout } = require("../frontend/register");
 const { filesLayout } = require("../frontend/files");
 const { upLoadFileToDB, uploadFile, downloadFileFromDB, deleteFileFromDB } = require("../frontend/fileProcessing");
+const session = require("express-session");
+
 
 const path = require("path");
 const serverColor = "#B22222";
@@ -16,6 +18,12 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "frontend")));
 
+app.use(session({
+    secret: "test",
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }
+}))
 const port = 3000;
 const databaseConnection = mysql.createConnection({
     host: process.env.DATABASE_HOST,
@@ -72,12 +80,10 @@ app.post("/uploadFile", uploadFile.single("fileData"), (req, res) => {
 });
 
 app.get("/download/:id", (req, res) => {
-    console.log("trying");
     downloadFileFromDB(req, res, databaseConnection)
 });
 
 app.delete("/delete/:id", (req, res) => {
-    console.log("trying");
     deleteFileFromDB(req, res, databaseConnection)
 });
 

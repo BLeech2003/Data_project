@@ -1,10 +1,23 @@
+const bcrypt = require("bcrypt");
+const hashVal = 10;
+
 const login = async (req, res, databaseConnection) => {
     try {
         const { email, password } = req.body;
         if (!email || !password)
             return res.status(400).send("Email and pass are required");
-        await loginFunction({ email, password }, databaseConnection);
-        res.redirect("/files");
+        const user = await loginFunction({ email, password }, databaseConnection);
+
+        console.log(user);
+        req.session.user = user;
+        req.session.save(err => {
+            if (err) {
+                console.error("Couldnt save session");
+                return res.status(500).send("Interal error");
+            }
+            res.redirect("/files");
+        })
+
 
     } catch (error) {
         console.error("login err", error);
@@ -32,7 +45,8 @@ const loginFunction = async (credentials, databaseConnection) => {
                 return;
             }
             const user = results[0];
-            const passMatch = credentials.password === user.user_pass;
+            const passMatch = await bcrypt.compare(credentials.password, user.user_pass);
+
             if (!passMatch) {
                 reject(new Error("Invalid credentials"));
                 return;
@@ -42,12 +56,14 @@ const loginFunction = async (credentials, databaseConnection) => {
         });
     });
 }
+
 const registerUser = async (req, res, databaseConnection) => {
     try {
         const { fullName, email, password } = req.body;
         if (!fullName || !email || !password)
             return res.status(400).send("All fields are required");
-        await register({ fullName, email, password }, databaseConnection);
+        const hashedPass = await bcrypt.hash(password, hashVal);
+        await register({ fullName, email, hashedPass }, databaseConnection);
         res.redirect("/login");
 
     } catch (error) {
@@ -65,7 +81,7 @@ const registerUser = async (req, res, databaseConnection) => {
 const register = async (data, dbCon) => {
     return new Promise((resolve, reject) => {
         const regQuery = `INSERT INTO load_storage.users (user_email, user_pass, full_name) values(?,?,?)`;
-        dbCon.execute(regQuery, [data.email, data.password, data.fullName], async (error, results) => {
+        dbCon.execute(regQuery, [data.email, data.hashedPass, data.fullName], async (error, results) => {
             if (error) {
                 reject(error);
             }
