@@ -106,9 +106,37 @@ const returnDefault = (bgColor, serverNumber) => {
     );
 }
 
+const getSessionInfo = (bgColor, serverNumber, req) => {
+    if (!req.session.views) {
+        req.session.views = 1;
+        req.session.server = serverNumber;
+    }
+    else {
+        req.session.views++;
+    }
+
+    return (
+        `
+        <html>
+            <body style="background-color: ${bgColor};">
+                <h1>
+                Server ${serverNumber} Session
+                </h1>
+                <p>Session Id: ${req.session.id} </p>
+                <p>Views: ${req.session.views} </p>
+                <p>Server origin: ${req.session.server || "first req"} </p>
+                <p>User: ${req.session.user ? req.session.user.full_name : "Not logged in"} </p>
+            </body>
+        </html>
+    `
+    );
+}
+
+
 module.exports = {
     returnDefault,
     loginFunction,
     login,
-    registerUser
+    registerUser,
+    getSessionInfo
 }

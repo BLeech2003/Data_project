@@ -1,21 +1,45 @@
 const express = require('express');
 const mysql = require("mysql2");
-const { returnDefault, login, registerUser } = require("./frontend/functions")
-const { loginLayout } = require("./frontend/login");
-const { regLayout } = require("./frontend/register");
-const { filesLayout } = require("./frontend/files");
-const { upLoadFileToDB, uploadFile } = require("./frontend/fileProcessing");
+const { returnDefault, login, registerUser, getSessionInfo } = require("../frontend/functions")
+const { loginLayout } = require("../frontend/login");
+const { regLayout } = require("../frontend/register");
+const { filesLayout } = require("../frontend/files");
+const { upLoadFileToDB, uploadFile, downloadFileFromDB, deleteFileFromDB } = require("../frontend/fileProcessing");
+const session = require("express-session");
+const MySQLStore = require('express-mysql-session')(session);
 
 const path = require("path");
-const serverColor = "#008ECC";
+const serverColor = "#c2d7f2";
 const port = 3002;
 const serverNumber = "3";
+
 require("dotenv").config();
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "frontend")));
 
+const sessionOptions = {
+    host: "localhost",
+    port: "3306",
+    user: "session_user",
+    password: "password",
+    database: "sessions_db",
+    clearExpired: true,
+    checkExpirationInterval: 900000,
+    expiration: 86400000,
+    createDatabasetable: true
+}
+const sessionStore = new MySQLStore(sessionOptions);
+
+app.use(session({
+    key: "session_name",
+    secret: "test",
+    resave: false,
+    store: sessionStore,
+    saveUninitialized: true,
+    cookie: { secure: false }
+}))
 
 const databaseConnection = mysql.createConnection({
     host: process.env.DATABASE_HOST,
@@ -69,6 +93,18 @@ app.post("/register", async (req, res) => {
 
 app.post("/uploadFile", uploadFile.single("fileData"), (req, res) => {
     upLoadFileToDB(req, res, databaseConnection);
+});
+
+app.get("/download/:id", (req, res) => {
+    downloadFileFromDB(req, res, databaseConnection)
+});
+
+app.delete("/delete/:id", (req, res) => {
+    deleteFileFromDB(req, res, databaseConnection)
+});
+
+app.get("/test-session", (req, res) => {
+    res.send(getSessionInfo(serverColor, serverNumber, req));
 });
 
 app.listen(port, () => {

@@ -1,16 +1,18 @@
 const express = require('express');
 const mysql = require("mysql2");
-const { returnDefault, login, registerUser } = require("../frontend/functions")
+const { returnDefault, login, registerUser, getSessionInfo } = require("../frontend/functions")
 const { loginLayout } = require("../frontend/login");
 const { regLayout } = require("../frontend/register");
 const { filesLayout } = require("../frontend/files");
 const { upLoadFileToDB, uploadFile, downloadFileFromDB, deleteFileFromDB } = require("../frontend/fileProcessing");
 const session = require("express-session");
-
+const MySQLStore = require('express-mysql-session')(session);
 
 const path = require("path");
-const serverColor = "#B22222";
+
+const serverColor = "#f7c1c1";
 const serverNumber = "1";
+const port = 3000;
 
 require("dotenv").config();
 
@@ -18,13 +20,28 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "frontend")));
 
+const sessionOptions = {
+    host: "localhost",
+    port: "3306",
+    user: "session_user",
+    password: "password",
+    database: "sessions_db",
+    clearExpired: true,
+    checkExpirationInterval: 900000,
+    expiration: 86400000,
+    createDatabasetable: true
+}
+const sessionStore = new MySQLStore(sessionOptions);
+
 app.use(session({
+    key: "session_name",
     secret: "test",
     resave: false,
+    store: sessionStore,
     saveUninitialized: true,
     cookie: { secure: false }
 }))
-const port = 3000;
+
 const databaseConnection = mysql.createConnection({
     host: process.env.DATABASE_HOST,
     user: process.env.DATABASE_USER,
@@ -85,6 +102,10 @@ app.get("/download/:id", (req, res) => {
 
 app.delete("/delete/:id", (req, res) => {
     deleteFileFromDB(req, res, databaseConnection)
+});
+
+app.get("/test-session", (req, res) => {
+    res.send(getSessionInfo(serverColor, serverNumber, req));
 });
 
 app.listen(port, () => {

@@ -1,2 +1,12 @@
-.env
-/node_modules
+# Ignore .env in any subfolder
+*/.env
+/server1/.env
+/server2/.env
+/server3/.env
+
+# Ignore node_modules in any subfolder
+*/node_modules/
+/server1/node_modules/
+/server2/node_modules/
+/server3/node_modules/
+/frontend/node_modules/
