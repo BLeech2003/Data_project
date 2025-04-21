@@ -58,6 +58,14 @@ const filesLayout = (bgColor, files = []) => {
                 border-radius: 4px;
                 cursor: pointer;
             }
+            .downloadButton {
+                padding: 0.5rem 1.5rem;
+                background-color: gold;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
             .modal{
                 display:none;
                 position:fixed;
@@ -125,16 +133,16 @@ const filesLayout = (bgColor, files = []) => {
                             <th> File name </th>
                             <th> Size </th>
                             <th> Upload Date </th>
-                            <th> Number of downloads </th>
+                            <th> Nr of downloads </th>
                             <th> Actions </th>
                         </tr>
                     </thead>
 
                     <tbody>
                     ${files.length === 0 ?
-            `   <tr>
+            `<tr>
                             <td colspan="5" style="text-align: center;"> No files found</td>
-                        <tr>` :
+                        </tr>` :
             files.map(file => `
                         <tr key=${file.file_id}>
                             <td>${file.file_name} </td>
@@ -142,12 +150,16 @@ const filesLayout = (bgColor, files = []) => {
                             <td>${new Date(file.upload_date).toLocaleString()} </td>
                             <td>${file.download_count} </td>
                             <td>
-                                <button class="deleteButton" onclick=deleteFile("${file.file_id}")> 
+                                <a class="downloadButton" href="/download/${file.file_id}"> 
+                                    Download
+                                </a>
+                                <button class="deleteButton" onclick="deleteFile('${file.file_id}')"> 
                                     Delete
                                 </button>
                             </td>
-                        <tr> 
-                    `).join("")}
+                        </tr> 
+                    `).join("")
+        }
                     </tbody >
                 </table >
             </div >
@@ -155,7 +167,7 @@ const filesLayout = (bgColor, files = []) => {
     <div id="uploadModal" class="modal">
         <div class="modal-content">
             <span class="closeButton"> &times;</span>
-            <h2> Upload a file<h2>
+            <h2> Upload a file</h2>
                 <form id="uploadForm" enctype="multipart/form-data" method="POST" action="/uploadFile">
                     <div class="form-container">
                         <label for="fileData">
@@ -185,6 +197,26 @@ const filesLayout = (bgColor, files = []) => {
                     }
                 }
 
+                async function deleteFile(fileId){
+                    if(confirm("Are you sure you want to delete this file?")){
+                        try{
+                        console.log("next step");
+                            const response = await fetch(\`/delete/\${fileId}\`,{
+                                method: "DELETE"
+                            });
+                            if(response.ok)
+                                window.location.reload();
+                            else{
+                                const err = await response.json();
+                                alert(error);
+                            }
+
+                        }catch(error){
+                            console.error(error);
+                            alert("Failed to delete file");
+                        }
+                    }    
+                }
         </script>
     </body>
         </html >
@@ -200,9 +232,6 @@ const formatFileSize = (file) => {
     return size;
 }
 
-const deleteFile = async () => {
-
-}
 
 module.exports = {
     filesLayout,

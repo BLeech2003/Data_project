@@ -1,10 +1,10 @@
 const express = require('express');
 const mysql = require("mysql2");
-const { returnDefault, login, registerUser } = require("./frontend/functions")
-const { loginLayout } = require("./frontend/login");
-const { regLayout } = require("./frontend/register");
-const { filesLayout } = require("./frontend/files");
-const { upLoadFileToDB,uploadFile } = require("./frontend/fileProcessing");
+const { returnDefault, login, registerUser } = require("../frontend/functions")
+const { loginLayout } = require("../frontend/login");
+const { regLayout } = require("../frontend/register");
+const { filesLayout } = require("../frontend/files");
+const { upLoadFileToDB, uploadFile, downloadFileFromDB, deleteFileFromDB } = require("../frontend/fileProcessing");
 
 const path = require("path");
 const serverColor = "#B22222";
@@ -69,6 +69,16 @@ app.post("/register", async (req, res) => {
 
 app.post("/uploadFile", uploadFile.single("fileData"), (req, res) => {
     upLoadFileToDB(req, res, databaseConnection);
+});
+
+app.get("/download/:id", (req, res) => {
+    console.log("trying");
+    downloadFileFromDB(req, res, databaseConnection)
+});
+
+app.delete("/delete/:id", (req, res) => {
+    console.log("trying");
+    deleteFileFromDB(req, res, databaseConnection)
 });
 
 app.listen(port, () => {
