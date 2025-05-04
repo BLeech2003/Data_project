@@ -105,7 +105,8 @@ app.post("/uploadFile", uploadFile.single("fileData"), (req, res) => {
 });
 
 app.get("/download/:id", (req, res) => {
-    downloadFileFromDB(req, res, databaseConnection)
+    downloadFileFromDB(req, res, databaseConnection);
+    return res.redirect("/files");
 });
 
 app.delete("/delete/:id", (req, res) => {

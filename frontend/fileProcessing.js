@@ -85,8 +85,8 @@ const copyFileToServer = async (localPath, filename) => {
         tryKeyboard: true,
     }
 
-   // const remotePath = path.join(serverDirectory, filename);
-const remotePath = `${serverDirectory}/${filename}`;
+    // const remotePath = path.join(serverDirectory, filename);
+    const remotePath = `${serverDirectory}/${filename}`;
     return new Promise((resolve, reject) => {
         clientConnection.on("ready", () => {
             clientConnection.sftp((error, sftp) => {
@@ -123,17 +123,31 @@ const downloadFileFromDB = async (req, res, dbConnection) => {
         if (!file) {
             return res.status(404).json({ error: "No file found" });
         }
-
+        increaseDownloadCount(fileID, dbConnection);
         const fileFromServer = await getFileFromServer(file.file_path);
         res.setHeader("Content-Type", file.file_type);
         res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(file.file_name)}"`);
         res.setHeader("Content-Length", file.sile_size);
-        fileFromServer.pipe(res);
+        await fileFromServer.pipe(res);
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Download failed" + error.message });
     }
 };
+
+const increaseDownloadCount = async (fileID, dbConnection) => {
+    return new Promise((resolve, reject) => {
+        const regQuery = `UPDATE load_storage.user_files SET download_count = download_count + 1
+        WHERE file_id = ?`;
+        dbConnection.execute(regQuery, [fileID], async (error, results) => {
+            if (error) {
+                reject(error);
+            }
+            else
+                resolve(results);
+        });
+    });
+}
 
 const getFileRecord = async (dbConnection, fileId) => {
     return new Promise((resolve, reject) => {
@@ -236,7 +250,7 @@ const deleteFileFromServer = async (filePath) => {
         port: 22,
         tryKeyboard: true,
     }
-console.log(filePath);
+    console.log(filePath);
     return new Promise((resolve, reject) => {
         clientConnection.on("ready", () => {
             clientConnection.sftp((error, sftp) => {
@@ -249,15 +263,15 @@ console.log(filePath);
                 //         clientConnection.end();
                 //         return reject(new Error("File not found"));
                 //     }
-                    sftp.unlink(filePath, (unlinkError) => {
-                        clientConnection.end();
-                        if (unlinkError) {
-                            reject(unlinkError);
-                        }
-                        else
-                            resolve();
-                    })
-               // });
+                sftp.unlink(filePath, (unlinkError) => {
+                    clientConnection.end();
+                    if (unlinkError) {
+                        reject(unlinkError);
+                    }
+                    else
+                        resolve();
+                })
+                // });
 
             });
         }).on("error", (error) => {
