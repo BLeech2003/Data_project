@@ -1,10 +1,10 @@
 const express = require('express');
 const mysql = require("mysql2");
-const { returnDefault, login, registerUser, getSessionInfo } = require("../frontend/functions")
-const { loginLayout } = require("../frontend/login");
-const { regLayout } = require("../frontend/register");
-const { filesLayout } = require("../frontend/files");
-const { upLoadFileToDB, uploadFile, downloadFileFromDB, deleteFileFromDB } = require("../frontend/fileProcessing");
+const { returnDefault, login, registerUser, getSessionInfo } = require("./frontend/functions")
+const { loginLayout } = require("./frontend/login");
+const { regLayout } = require("./frontend/register");
+const { filesLayout } = require("./frontend/files");
+const { upLoadFileToDB, uploadFile, downloadFileFromDB, deleteFileFromDB } = require("./frontend/fileProcessing");
 const session = require("express-session");
 const MySQLStore = require('express-mysql-session')(session);
 
@@ -18,9 +18,17 @@ require("dotenv").config();
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "frontend")));
+app.use((req,res,next)=>{
+    const allowedHost = process.env.SERVERHOST;
+    const host = req.headers.host;
+    if(host !== allowedHost || req.headers["x-load-balancer"] !== "true"){
+        return res.status(403).send("Access denied!  Try using the Nginx Server's address.")
+    }
+    next();
+});
 
 const sessionOptions = {
-    host: "localhost",
+    host: "192.168.68.101",
     port: "3306",
     user: "session_user",
     password: "password",

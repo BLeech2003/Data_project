@@ -1,13 +1,15 @@
 
 services:
 #run 3 servers
+
     server1:
         build: "./server1"
         container_name: dc_server1
         ports:
             - 3000:3000
         volumes:
-        - "./frontend:/app/frontend"  
+        - "./frontend:/app/frontend"
+        - "/app/frontend/node_modules"   
             
     server2:
         build: "./server2"
@@ -16,6 +18,7 @@ services:
             - 3001:3001
         volumes:
         - "./frontend:/app/frontend"  
+        - "/app/frontend/node_modules" 
         
     server3:
         build: "./server3"
@@ -24,3 +27,4 @@ services:
             - 3002:3002
         volumes:
         - "./frontend:/app/frontend"  
+        - "/app/frontend/node_modules" 
